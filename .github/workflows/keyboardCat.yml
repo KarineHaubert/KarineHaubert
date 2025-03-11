@@ -2,7 +2,7 @@ name: Animate GitHub Contributions
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # Executa todo dia à meia-noite
+     - cron: "* * * * *"
 
 jobs:
   commit_animation:
