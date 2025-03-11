@@ -1,0 +1,43 @@
+name: Animate GitHub Contributions
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # Executa todo dia à meia-noite
+
+jobs:
+  commit_animation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v2
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "bot@example.com"
+
+      - name: Baixar JSON da Animação
+        run: |
+          curl -O https://raw.githubusercontent.com/KarineHaubert/KarineHaubert/main/commit_animation.json
+
+      - name: Aplicar o Quadro Atual no Gráfico
+        run: |
+          FRAME_INDEX=$(date +%j | awk '{print $1 % 10}')  # Alternar entre 10 quadros
+          FRAME=$(jq ".[$FRAME_INDEX]" commit_animation.json)
+
+          # Criar commits baseados no quadro
+          for i in $(seq 0 6); do
+            for j in $(seq 0 51); do
+              VALUE=$(echo $FRAME | jq -r ".[$i][$j]")
+              if [ "$VALUE" -eq "1" ]; then
+                DATE=$(date -d "$((j-51)) days" +"%Y-%m-%dT12:00:00")
+                echo "Pixel $i,$j" >> history.txt
+                git add history.txt
+                GIT_COMMITTER_DATE="$DATE" git commit -m "Pixel commit $i,$j" --date="$DATE"
+              fi
+            done
+          done
+
+      - name: Push no repositório
+        run: git push origin main
